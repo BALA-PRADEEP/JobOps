@@ -1,0 +1,45 @@
+{
+  "profile_version": 1,
+  "identity": {
+    "name": "Jordan Lee",
+    "email": "jordan@example.com",
+    "phone": "+1 555 010 0200",
+    "linkedin": "https://www.linkedin.com/in/example-candidate/",
+    "portfolio": "https://example.com/portfolio",
+    "current_location": "Bengaluru, Karnataka",
+    "preferred_locations": [
+      "Bengaluru",
+      "Bangalore"
+    ]
+  },
+  "experience": {
+    "years": 3,
+    "current_title": "Software Engineer",
+    "company_context": "Product technology company"
+  },
+  "skills": {
+    "backend": ["Python", "FastAPI", "REST APIs", "SQLAlchemy"],
+    "frontend": ["React", "TypeScript"],
+    "data": ["PostgreSQL", "MongoDB", "ETL"],
+    "integrations": ["OAuth 2.0", "webhooks", "external APIs", "external-ID mapping", "sync recovery", "multi-tenant SaaS"],
+    "ai": ["RAG", "embeddings", "vector search", "context routing"],
+    "cloud_quality": ["Azure", "Playwright", "E2E testing"]
+  },
+  "evidence": [
+    "Built external API integrations with OAuth and reconciliation",
+    "Built full-stack product workflows",
+    "Built a retrieval-based AI assistant",
+    "Introduced end-to-end browser automation"
+  ],
+  "protected_facts": {
+    "notice_period_days": null,
+    "current_fixed_salary_inr": null,
+    "current_total_ctc_inr": null,
+    "expected_salary_inr": null,
+    "requires_sponsorship": null,
+    "work_authorization_india": null,
+    "willing_to_relocate_bengaluru": null,
+    "demographic_answers": null,
+    "background_declarations": null
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "source": "demo",
+  "source_job_id": "jobops-demo-001",
+  "company": "Example AI",
+  "title": "Product Engineer - Applied AI",
+  "location": "Bengaluru",
+  "work_mode": "hybrid",
+  "posted_at": "REPLACE_AT_RUNTIME",
+  "apply_url": "https://boards.greenhouse.io/example/jobs/123456",
+  "description": "We are hiring a Product Engineer with 2+ years of experience. Build product features using Python, FastAPI, REST APIs, PostgreSQL, React and TypeScript. Own OAuth integrations, multi-tenant SaaS workflows and production debugging. Experience with RAG, embeddings, vector search, Azure and Playwright is valuable.",
+  "salary_min_inr": 2200000,
+  "salary_max_inr": 3500000
+}

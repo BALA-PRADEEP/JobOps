@@ -1,0 +1,24 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+jobops.db
+.env
+.next/
+node_modules/
+artifacts/
+*.log
+
+# Local/runtime state
+*.db
+*.sqlite
+*.sqlite3
+.env
+.env.*
+!.env.example
+playwright-report/
+test-results/
+artifacts/
+
+# Candidate private runtime data
+config/candidate/private/
+resumes/private/

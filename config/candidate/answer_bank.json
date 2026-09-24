@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "answers": [
+    {
+      "key": "portfolio_url",
+      "value": "https://example.com/portfolio",
+      "status": "verified"
+    },
+    {
+      "key": "linkedin_url",
+      "value": "https://www.linkedin.com/in/example-candidate/",
+      "status": "verified"
+    },
+    {
+      "key": "professional_summary",
+      "value": "Software/product engineer with experience across Python backends, React/TypeScript workflows, databases, external integrations, and applied AI.",
+      "status": "verified"
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: jobops
+      POSTGRES_USER: jobops
+      POSTGRES_PASSWORD: jobops
+    ports:
+      - "5432:5432"
+    volumes:
+      - jobops_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jobops -d jobops"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  external-services:
+    build:
+      context: .
+      dockerfile: src/external-integrations/jobops-external-services/Dockerfile
+    environment:
+      DATABASE_URL: postgresql+psycopg://jobops:jobops@postgres:5432/jobops
+      JOBOPS_AUTO_SUBMIT: "false"
+      JOBOPS_FRESH_PREFERRED_HOURS: "24"
+      JOBOPS_FRESH_MAX_HOURS: "48"
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    build: ./src/web/jobops-web
+    environment:
+      JOBOPS_API_URL: http://external-services:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - external-services
+
+volumes:
+  jobops_postgres:
