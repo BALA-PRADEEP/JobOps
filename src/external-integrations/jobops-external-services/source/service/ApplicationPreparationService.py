@@ -46,9 +46,10 @@ class ApplicationPreparationService:
             "portfolio": identity["portfolio"],
             "current_location": identity["current_location"],
         }
+        years = profile["experience"]["years"]
         generated_drafts = {
             "professional_summary": (
-                "Software/product engineer with 2+ years of startup experience across Python/FastAPI backends, "
+                f"Software/product engineer with {years}+ years of experience across Python/FastAPI backends, "
                 "React/TypeScript workflows, databases, external integrations, and applied AI."
             )
         }
@@ -88,7 +89,13 @@ class ApplicationPreparationService:
         self.events.append(
             application.id,
             "APPLICATION_PACKAGE_BUILT",
-            package.model_dump_json(),
+            json.dumps({
+                "state": package.state,
+                "resume_key": package.resume_key,
+                "missing_protected_fields": package.missing_protected_fields,
+                "ats_type": package.ats_type,
+                "submit_allowed": package.submit_allowed,
+            }),
         )
         self.session.commit()
         return package

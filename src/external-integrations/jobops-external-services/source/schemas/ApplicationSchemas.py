@@ -15,7 +15,20 @@ class ApplicationPackage(BaseModel):
     submit_allowed: bool = False
 
 
-class BrowserRunResult(BaseModel):
+class BrowserTraceEvent(BaseModel):
+    step: str
+    status: str
+    detail: str
+
+
+class ApplicationFieldResult(BaseModel):
+    descriptor: str
+    field_type: str
+    status: str
+    value_source: str | None = None
+
+
+class DryRunResult(BaseModel):
     status: str
     ats_type: str
     filled_fields: list[str]
@@ -24,4 +37,7 @@ class BrowserRunResult(BaseModel):
     resume_uploaded: bool
     captcha_detected: bool
     submit_clicked: bool = False
+    trace: list[BrowserTraceEvent]
+    fields: list[ApplicationFieldResult]
     screenshot_path: str | None = None
+    result_path: str | None = None

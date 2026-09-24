@@ -25,7 +25,11 @@ _ALLOWED_TRANSITIONS: dict[ApplicationState, frozenset[ApplicationState]] = {
     ApplicationState.SHORTLISTED: frozenset({ApplicationState.PREPARING}),
     ApplicationState.PREPARING: frozenset({ApplicationState.NEEDS_INPUT, ApplicationState.READY_FOR_REVIEW}),
     ApplicationState.NEEDS_INPUT: frozenset({ApplicationState.READY_FOR_REVIEW, ApplicationState.FAILED_FINAL}),
-    ApplicationState.READY_FOR_REVIEW: frozenset({ApplicationState.APPLYING, ApplicationState.FAILED_FINAL}),
+    ApplicationState.READY_FOR_REVIEW: frozenset({
+        ApplicationState.NEEDS_INPUT,
+        ApplicationState.APPLYING,
+        ApplicationState.FAILED_FINAL,
+    }),
     ApplicationState.APPLYING: frozenset({
         ApplicationState.SUBMITTED,
         ApplicationState.SUBMISSION_UNCONFIRMED,
