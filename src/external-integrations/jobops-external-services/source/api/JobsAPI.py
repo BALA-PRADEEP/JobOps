@@ -9,14 +9,35 @@ from source.Utils.Errors import (
 )
 from source.dal.db_session import get_db
 from source.schemas.ApplicationSchemas import ApplicationPackage, DryRunResult
-from source.schemas.JobSchemas import AnalyzeResponse, JobCreate, JobRecord
+from source.schemas.JobSchemas import (
+    AnalyzeResponse,
+    DiscoveredJobCreate,
+    JobCreate,
+    JobRecord,
+    JobResolutionRequest,
+)
 from source.service.ApplicationExecutionService import ApplicationExecutionService
 from source.service.ApplicationPreparationService import (
     ApplicationPreparationService,
 )
 from source.service.JobIngestionService import JobIngestionService
+from source.service.JobIntakeService import JobIntakeService
+from source.service.JobResolutionService import JobResolutionService
 
 JOBS_API = APIRouter(prefix="/jobs", tags=["jobs"])
+
+
+@JOBS_API.post("/intake", response_model=JobRecord)
+def intake_discovered_job(
+    payload: DiscoveredJobCreate,
+    db: Session = Depends(get_db),
+):
+    try:
+        return JobIntakeService(db).intake(payload)
+    except ConflictError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except JobOpsError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @JOBS_API.post("/analyze", response_model=AnalyzeResponse)
@@ -25,6 +46,20 @@ def analyze_job(payload: JobCreate, db: Session = Depends(get_db)):
         return JobIngestionService(db).analyze_and_store(payload)
     except ConflictError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except JobOpsError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@JOBS_API.post("/{job_id}/resolve", response_model=AnalyzeResponse)
+def resolve_job_application_url(
+    job_id: int,
+    payload: JobResolutionRequest,
+    db: Session = Depends(get_db),
+):
+    try:
+        return JobResolutionService(db).resolve_and_analyze(job_id, payload)
+    except NotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
     except JobOpsError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 

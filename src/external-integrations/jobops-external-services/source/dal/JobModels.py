@@ -17,7 +17,14 @@ class Job(Base):
     location: Mapped[str] = mapped_column(String(255), default="")
     work_mode: Mapped[str | None] = mapped_column(String(50), nullable=True)
     posted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+
+    # Legacy execution URL. Kept while existing execution code is migrated.
     apply_url: Mapped[str] = mapped_column(Text)
+    discovery_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    canonical_job_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    application_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    resolver_status: Mapped[str] = mapped_column(String(30), default="RESOLVED")
+
     description: Mapped[str] = mapped_column(Text)
     salary_min_inr: Mapped[int | None] = mapped_column(Integer, nullable=True)
     salary_max_inr: Mapped[int | None] = mapped_column(Integer, nullable=True)

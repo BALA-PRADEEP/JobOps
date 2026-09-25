@@ -16,10 +16,33 @@ class JobCreate(BaseModel):
     salary_max_inr: int | None = None
 
 
+class DiscoveredJobCreate(BaseModel):
+    source: str
+    source_job_id: str
+    company: str
+    title: str
+    location: str = ""
+    work_mode: str | None = None
+    posted_at: datetime
+    discovery_url: HttpUrl
+    description: str
+    salary_min_inr: int | None = None
+    salary_max_inr: int | None = None
+
+
+class JobResolutionRequest(BaseModel):
+    application_url: HttpUrl
+    canonical_job_url: HttpUrl | None = None
+
+
 class JobRecord(JobCreate):
     model_config = ConfigDict(from_attributes=True)
     id: int
     ats_type: str
+    discovery_url: str | None = None
+    canonical_job_url: str | None = None
+    application_url: str | None = None
+    resolver_status: str = "RESOLVED"
     created_at: datetime
 
 
