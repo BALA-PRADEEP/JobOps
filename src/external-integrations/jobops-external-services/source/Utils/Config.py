@@ -12,6 +12,15 @@ class Settings:
     fresh_preferred_hours: int = int(os.getenv("JOBOPS_FRESH_PREFERRED_HOURS", "24"))
     fresh_max_hours: int = int(os.getenv("JOBOPS_FRESH_MAX_HOURS", "48"))
     auto_submit: bool = os.getenv("JOBOPS_AUTO_SUBMIT", "false").lower() == "true"
+    execution_mode: str = os.getenv("JOBOPS_EXECUTION_MODE", "queued").strip().lower()
+    cors_origins: tuple[str, ...] = tuple(
+        origin.strip()
+        for origin in os.getenv(
+            "JOBOPS_CORS_ORIGINS",
+            "http://localhost:3000,http://127.0.0.1:3000",
+        ).split(",")
+        if origin.strip()
+    )
     candidate_profile_path: Path = Path(
         os.getenv(
             "JOBOPS_CANDIDATE_PROFILE_PATH",

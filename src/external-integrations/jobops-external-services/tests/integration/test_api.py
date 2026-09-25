@@ -12,6 +12,7 @@ def test_health():
     assert response.status_code == 200
     body = response.json()
     assert body["auto_submit"] is False
+    assert body["execution_mode"] == "queued"
     assert body["dry_run_ats"] == ["greenhouse"]
 
 
@@ -40,16 +41,9 @@ def test_job_analysis_and_idempotent_application_package():
     job_id = body["job"]["id"]
     assert body["analysis"]["ats_type"] == "greenhouse"
 
-    package_1 = client.get(
-        f"/v1/jobs/{job_id}/application-package"
-    )
-    package_2 = client.get(
-        f"/v1/jobs/{job_id}/application-package"
-    )
+    package_1 = client.get(f"/v1/jobs/{job_id}/application-package")
+    package_2 = client.get(f"/v1/jobs/{job_id}/application-package")
     assert package_1.status_code == 200
     assert package_2.status_code == 200
-    assert (
-        package_1.json()["application_id"]
-        == package_2.json()["application_id"]
-    )
+    assert package_1.json()["application_id"] == package_2.json()["application_id"]
     assert package_1.json()["submit_allowed"] is False

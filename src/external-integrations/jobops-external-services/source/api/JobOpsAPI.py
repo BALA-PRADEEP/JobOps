@@ -1,19 +1,17 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from source.Utils.Config import settings
 from source.api.HealthAPI import HEALTH_API
 from source.api.JobsAPI import JOBS_API
 
 app = FastAPI(
     title="JobOps External Services",
-    version="0.3.0",
+    version="0.4.0",
 )
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-    ],
+    allow_origins=list(settings.cors_origins),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

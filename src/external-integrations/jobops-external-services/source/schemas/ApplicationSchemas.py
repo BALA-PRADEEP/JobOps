@@ -1,4 +1,5 @@
-from pydantic import BaseModel, HttpUrl
+from datetime import datetime
+from pydantic import BaseModel, ConfigDict, HttpUrl
 
 
 class ApplicationPackage(BaseModel):
@@ -13,6 +14,20 @@ class ApplicationPackage(BaseModel):
     ats_type: str
     apply_url: HttpUrl
     submit_allowed: bool = False
+
+
+class ExecutionRequestResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    application_id: int
+    action: str
+    status: str
+    attempt_count: int
+    last_error: str | None = None
+    created_at: datetime
+    updated_at: datetime
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
 
 
 class BrowserTraceEvent(BaseModel):

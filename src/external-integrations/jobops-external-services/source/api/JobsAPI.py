@@ -8,7 +8,7 @@ from source.Utils.Errors import (
     UnsupportedATSError,
 )
 from source.dal.db_session import get_db
-from source.schemas.ApplicationSchemas import ApplicationPackage, DryRunResult
+from source.schemas.ApplicationSchemas import ApplicationPackage, ExecutionRequestResponse
 from source.schemas.JobSchemas import (
     AnalyzeResponse,
     DiscoveredJobCreate,
@@ -16,10 +16,8 @@ from source.schemas.JobSchemas import (
     JobRecord,
     JobResolutionRequest,
 )
-from source.service.ApplicationExecutionService import ApplicationExecutionService
-from source.service.ApplicationPreparationService import (
-    ApplicationPreparationService,
-)
+from source.service.ApplicationPreparationService import ApplicationPreparationService
+from source.service.ExecutionRequestService import ExecutionRequestService
 from source.service.JobIngestionService import JobIngestionService
 from source.service.JobIntakeService import JobIntakeService
 from source.service.JobResolutionService import JobResolutionService
@@ -69,10 +67,7 @@ def list_jobs(db: Session = Depends(get_db)):
     return JobIngestionService(db).list_jobs()
 
 
-@JOBS_API.get(
-    "/{job_id}/application-package",
-    response_model=ApplicationPackage,
-)
+@JOBS_API.get("/{job_id}/application-package", response_model=ApplicationPackage)
 def build_application_package(
     job_id: int,
     db: Session = Depends(get_db),
@@ -85,19 +80,27 @@ def build_application_package(
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
-@JOBS_API.post(
-    "/{job_id}/dry-run",
-    response_model=DryRunResult,
-)
-def run_application_dry_run(
+@JOBS_API.post("/{job_id}/dry-run", response_model=ExecutionRequestResponse)
+def queue_application_dry_run(
     job_id: int,
     db: Session = Depends(get_db),
 ):
     try:
-        return ApplicationExecutionService(db).run_dry_run(job_id)
+        return ExecutionRequestService(db).enqueue_dry_run(job_id)
     except NotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except UnsupportedATSError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     except (ValueError, JobOpsError) as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@JOBS_API.get("/execution-requests/{request_id}", response_model=ExecutionRequestResponse)
+def get_execution_request(
+    request_id: int,
+    db: Session = Depends(get_db),
+):
+    try:
+        return ExecutionRequestService(db).get_request(request_id)
+    except NotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc

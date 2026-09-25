@@ -1,10 +1,33 @@
 # JobOps
 
-JobOps is a production-oriented job discovery, fit-analysis, application preparation, browser automation, and application tracking system.
+JobOps is the execution system for the scheduled job search.
 
-## Architecture direction
+## Objective
 
-The repository follows the same high-level separation as the layered application architecture used as the structural reference:
+The intended production flow is:
+
+```text
+Hourly Job Watch
+  -> fresh jobs from the internet
+  -> JobOps intake
+  -> normalize + deduplicate
+  -> verify freshness
+  -> resolve official job/application URL
+  -> score against the verified candidate profile
+  -> choose the correct resume
+  -> prepare answers
+  -> execute the correct ATS adapter
+  -> ask only when a required candidate-owned fact is unknown
+  -> submit only when the application is safe
+  -> verify the submission
+  -> track Applied / Interview / Rejected / Offer
+```
+
+The goal is not a generic job board and not a blind mass-apply bot. The goal is to turn the existing scheduled job watch into a controlled, observable application pipeline.
+
+## Coding rule
+
+JobOps follows the GMS-style separation used as the structural reference:
 
 ```text
 src/
@@ -24,74 +47,84 @@ src/
         Utils/
 ```
 
-The important rule is architectural, not cosmetic:
+The architecture must stay generic:
 
 ```text
-Web UI
-  -> JobOps HTTP service client
-  -> API boundary
-  -> application service
-  -> repositories / provider interfaces
-  -> ATS or job-source provider
+Web
+ -> JobOps service client
+ -> API
+ -> application service
+ -> repositories / provider interfaces
+ -> ATS / job-source provider
 ```
 
-Provider-specific behavior never leaks into UI, persistence, or core scoring logic.
+Provider-specific Greenhouse/Lever/Ashby logic must not leak into scoring, persistence, candidate profile, or React components.
 
-See `docs/CODING_STRUCTURE.md` for the detailed dependency rules and extension model.
+## Free-first runtime
 
-## Current milestone
+Initial production runtime is intentionally free-tier friendly:
 
-The current branch restructures the MVP into the long-term code organization before adding more automation.
+```text
+Vercel Hobby
+  -> Next.js control room
+
+Vercel Hobby
+  -> lightweight FastAPI API
+  -> no Chromium/browser execution
+
+Neon Free
+  -> PostgreSQL system of record
+
+GitHub Actions
+  -> hourly Playwright application worker
+  -> reads queued execution requests from Neon
+  -> stores short-lived execution artifacts
+```
+
+This split prevents Playwright from running inside a serverless request and keeps the browser worker replaceable later.
+
+## Current implementation
 
 Implemented:
-- verified candidate source of truth with unknown personal facts preserved as null;
-- strict freshness policy: prefer <24h, reject >48h;
-- deterministic explainable fit scoring;
+- GMS-aligned repository structure;
+- deterministic freshness and fit scoring;
+- verified candidate profile boundary;
+- protected/unknown candidate-fact blocking;
 - resume selection;
-- job/application persistence and event history;
-- centralized application state machine;
-- versioned FastAPI endpoints;
-- Greenhouse dry-run adapter behind a generic ATS interface;
-- browser-run persistence model;
-- protected-field blocking;
-- web client isolated under `src/web/jobops-web`;
-- unit, integration, and browser tests.
+- application state machine and audit events;
+- discovery URL vs canonical job URL vs application URL separation;
+- scheduled-job intake endpoint;
+- application URL resolution endpoint;
+- Greenhouse dry-run adapter;
+- CAPTCHA stop behavior;
+- field-level execution traces;
+- queued browser execution;
+- hourly GitHub Actions worker;
+- Next.js control room;
+- SQLite local support and Alembic/PostgreSQL migrations.
 
-Intentionally not enabled yet:
-- automatic submission;
-- CAPTCHA bypass;
-- Lever/Ashby execution adapters;
-- live job-source ingestion;
-- LLM-generated answers affecting eligibility or state transitions.
+Still to connect:
+- Neon production project;
+- Vercel API environment variables;
+- Vercel web -> live API;
+- hourly ChatGPT Job Watch -> JobOps intake;
+- automatic application-URL resolver;
+- Lever adapter;
+- Ashby adapter;
+- controlled submission and confirmation verification.
 
-## Run backend
+See:
+- `docs/PRODUCT_OBJECTIVE.md`
+- `docs/CURRENT_STATUS.md`
+- `docs/CODING_STRUCTURE.md`
+- `docs/FREE_RUNTIME.md`
+- `docs/ROADMAP.md`
 
-```bash
-make api
-```
+## Safety rules
 
-Open `http://127.0.0.1:8000/docs`.
-
-## Run web
-
-```bash
-cd src/web/jobops-web
-npm install
-npm run dev
-```
-
-## Run tests
-
-```bash
-make test
-```
-
-## Core correctness rules
-
-- Unknown personal facts are never inferred.
-- Browser automation stops on CAPTCHA or unsupported authentication barriers.
-- Provider-specific DOM/API behavior stays in `externalService` adapters.
-- API routes stay thin.
-- Services own workflows and state transitions.
-- DAL owns persistence only.
-- `SUBMITTED` will only be recorded after confirmation evidence exists.
+- `JOBOPS_AUTO_SUBMIT=false` remains the default.
+- Unknown candidate-owned facts are never guessed.
+- Real candidate data and real resumes must not be committed to this public repository.
+- CAPTCHA and unsupported authentication barriers stop automation.
+- A dry-run never clicks Submit.
+- `SUBMITTED` will only be recorded after confirmation evidence is captured.

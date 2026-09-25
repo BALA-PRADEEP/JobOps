@@ -1,8 +1,9 @@
 FROM python:3.12-slim
 WORKDIR /app
 
+COPY src/external-integrations/jobops-external-services/requirements-worker.txt ./requirements-worker.txt
 COPY src/external-integrations/jobops-external-services/requirements.txt ./requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements-worker.txt
 RUN playwright install --with-deps chromium
 
 COPY src/external-integrations/jobops-external-services ./
