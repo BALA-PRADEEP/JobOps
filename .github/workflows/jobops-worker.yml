@@ -1,0 +1,84 @@
+name: JobOps Application Worker
+
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  application-worker:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/external-integrations/jobops-external-services
+    env:
+      DATABASE_URL: ${{ secrets.JOBOPS_DATABASE_URL }}
+      JOBOPS_CANDIDATE_PROFILE_B64: ${{ secrets.JOBOPS_CANDIDATE_PROFILE_B64 }}
+      PRODUCT_RESUME_B64: ${{ secrets.JOBOPS_PRODUCT_RESUME_B64 }}
+      BACKEND_RESUME_B64: ${{ secrets.JOBOPS_BACKEND_RESUME_B64 }}
+      AI_RESUME_B64: ${{ secrets.JOBOPS_AI_RESUME_B64 }}
+      JOBOPS_AUTO_SUBMIT: "false"
+      JOBOPS_EXECUTION_MODE: "worker"
+      JOBOPS_WORKER_LIMIT: "3"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Skip until production secrets are configured
+        id: configured
+        shell: bash
+        run: |
+          if [ -z "$DATABASE_URL" ] || [ -z "$JOBOPS_CANDIDATE_PROFILE_B64" ]; then
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "JobOps worker secrets are not configured yet; exiting safely."
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-python@v5
+        if: steps.configured.outputs.ready == 'true'
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            src/external-integrations/jobops-external-services/requirements.txt
+            src/external-integrations/jobops-external-services/requirements-worker.txt
+
+      - name: Install worker dependencies
+        if: steps.configured.outputs.ready == 'true'
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-worker.txt
+          python -m playwright install --with-deps chromium
+
+      - name: Materialize private resumes
+        if: steps.configured.outputs.ready == 'true'
+        shell: bash
+        run: |
+          PRIVATE_ROOT="$RUNNER_TEMP/jobops-private"
+          mkdir -p "$PRIVATE_ROOT/resumes"
+          if [ -n "$PRODUCT_RESUME_B64" ]; then echo "$PRODUCT_RESUME_B64" | base64 -d > "$PRIVATE_ROOT/resumes/product_engineering.pdf"; fi
+          if [ -n "$BACKEND_RESUME_B64" ]; then echo "$BACKEND_RESUME_B64" | base64 -d > "$PRIVATE_ROOT/resumes/backend_engineering.pdf"; fi
+          if [ -n "$AI_RESUME_B64" ]; then echo "$AI_RESUME_B64" | base64 -d > "$PRIVATE_ROOT/resumes/applied_ai.pdf"; fi
+          echo "JOBOPS_RESUMES_DIR=$PRIVATE_ROOT/resumes" >> "$GITHUB_ENV"
+          echo "JOBOPS_ARTIFACT_DIR=$RUNNER_TEMP/jobops-artifacts" >> "$GITHUB_ENV"
+
+      - name: Apply database migrations
+        if: steps.configured.outputs.ready == 'true'
+        run: alembic upgrade head
+
+      - name: Process queued application dry-runs
+        if: steps.configured.outputs.ready == 'true'
+        run: python -m source.worker.ScheduledApplicationWorker
+
+      - name: Upload execution evidence
+        if: steps.configured.outputs.ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: jobops-worker-artifacts-${{ github.run_id }}
+          path: ${{ runner.temp }}/jobops-artifacts
+          if-no-files-found: ignore
+          retention-days: 7
