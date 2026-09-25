@@ -50,7 +50,6 @@ jobs:
   web:
     name: Web build
     runs-on: ubuntu-latest
-    if: ${{ hashFiles('src/web/jobops-web/package.json') != '' }}
     defaults:
       run:
         working-directory: src/web/jobops-web
