@@ -69,3 +69,24 @@ The committed profile is synthetic and exists only for development/tests.
 Use free tiers until an actual technical limitation appears.
 
 Do not add a paid queue, always-on worker, paid database, or paid observability system merely for convenience.
+
+## Isolation policy
+
+JobOps must remain a standalone system and must not share application state, databases, deployment projects, runtime secrets, or worker state with any other project.
+
+Dedicated resources:
+- GitHub repository: JobOps only
+- Neon project: JobOps-database only
+- Neon database: dedicated JobOps database only
+- Vercel web project: dedicated JobOps web project
+- Vercel API project: dedicated JobOps API project
+- GitHub Actions secrets: repository-scoped JOBOPS_* secrets only
+- Browser worker: JobOps workflow only
+
+Rules:
+- Never point JobOps at an existing product database.
+- Never reuse another project's Vercel project or environment variables.
+- Never store JobOps candidate/application data in another system's tables.
+- Never reuse another project's queues, workers, artifacts, or credentials.
+- Any future shared infrastructure must be an explicit architectural decision, not an implementation shortcut.
+
