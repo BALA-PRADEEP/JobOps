@@ -2,6 +2,10 @@ name: JobOps Database Bootstrap
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".jobops/bootstrap-neon.trigger"
 
 permissions:
   contents: read
