@@ -1,0 +1,43 @@
+name: JobOps Database Bootstrap
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bootstrap:
+    name: Verify isolation and migrate Neon
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/external-integrations/jobops-external-services
+    env:
+      JOBOPS_DATABASE_URL: ${{ secrets.JOBOPS_DATABASE_URL }}
+      DATABASE_URL: ${{ secrets.JOBOPS_DATABASE_URL }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Require isolated JobOps database secret
+        shell: bash
+        run: |
+          if [ -z "$JOBOPS_DATABASE_URL" ]; then
+            echo "::error::Missing repository secret JOBOPS_DATABASE_URL"
+            exit 1
+          fi
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: src/external-integrations/jobops-external-services/requirements.txt
+
+      - name: Install database dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Verify isolation and initialize schema
+        run: python scripts/bootstrap_database.py
